@@ -1,0 +1,203 @@
+\documentclass[a4j,11pt]{jarticle}
+\usepackage[dvipdfm]{graphicx}
+\usepackage{lastpage}
+\usepackage{fancyhdr}
+\usepackage{listings, jlisting}
+\renewcommand{\lstlistingname}{リスト}
+\lstset{language=c,
+    basicstyle=\ttfamily\scriptsize,
+    commentstyle=\textit,
+    classoffset=1,
+    keywordstyle=\bfseries,                                                     
+    frame=tRBl,                                                                  
+    framesep=5pt,                                                              
+    showstringspaces=false,                                                     
+    numbers=left,                                                               
+    stepnumber=1,                                                               
+    numberstyle=\tiny,                                                          
+    tabsize=2                                                                   
+}
+
+
+\makeatletter
+\title{第4回}
+\author{201111332　赤田樹皇}
+\date{2012年1月11日}
+
+\pagestyle{fancy}
+
+% headers & footers
+\lhead{シミュレーション物理　\@title　提出日：\@date\\\@author}
+\chead{}
+\rhead{}
+\lfoot{}
+\cfoot{\thepage /\pageref{LastPage}}
+\rfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\makeatother
+
+\begin{document}
+\section*{練習問題(7)}
+\subsection*{引力なしの膨張シミュレーションプログラム}
+
+以下に作成したプログラムex7.cのソースコードを載せる。
+\begin{lstlisting}{caption=ex7.c,label=ラベル}
+//-1から1の範囲で半径1の円内にある点の集合500組
+#include<stdio.h>
+#include<stdlib.h>
+#define N 500
+
+void makefile(double x0[],double y0[],double x[],double y[]){
+    FILE *fo;
+    char *fname;
+    fname="data.csv";
+    if((fo=fopen(fname,"w")) == NULL){
+        printf("File[%s] does not open!!\n",fname);
+        exit(0);
+    }
+    int i;
+    for(i=0;i<N;i++)
+        fprintf(fo,"%f,%f,%f,%f\n",x0[i],y0[i],x[i],y[i]);
+
+    fclose(fo);
+}
+
+
+void makestar(double x0[],double y0[]){
+
+    int count,n,i;    //countが200になるまで
+    double x,y;
+    n = 1000;       //countが200になるように
+    count = 0;
+
+    srand(193);     //設定
+    for(i=0;i<=n;i++) {
+        if(count < N){
+            /*-1以上1以下の乱数を生成*/
+            x = (2.0*rand()/(double)RAND_MAX)-1.0;  //castしておく必要あり
+            y = (2.0*rand()/(double)RAND_MAX)-1.0;
+
+            /*-1<=x,y<=1の範囲にある中心原点半径1の
+              扇形の中に乱数による点が入ったらカウントする*/
+            if((x*x+y*y)<=1.0) {
+                x0[count]=x;
+                y0[count]=y;
+                count++;
+            }
+            if(i==n) printf("we cannot have suitable data\n");
+
+        }else{break;} 
+    }
+}
+
+void simulate(double x0[],double y0[],double H,int org,double dt,int nk){
+    double vx[N],vy[N];
+    int i,t;
+    for(i = 0;i < N;i++){
+        vx[i] = H * x0[i],vy[i] = H * y0[i];   //初速度を設定
+        x0[i] += org,y0[i] += org;             //全天体の位置を第一象限へ  
+    }
+    for(t = 0;t <= nk;t++)
+        for(i = 0;i < N;i++)
+            x0[i] += vx[i]*dt,y0[i] += vy[i]*dt; 
+}
+
+
+int  main(){
+    double x0[N],y0[N];
+    double x[N],y[N];    
+    makestar(x0,y0);
+    int i;
+    for(i = 0;i < N;i++)
+        x[i]=x0[i],y[i]=y0[i];
+    simulate(x,y,3.5,50,0.1,20);
+    makefile(x0,y0,x,y);
+    return 0;
+}
+
+\end{lstlisting}
+計算は基本的に配列x0,y0で行うようにした。また、H,org,dt,nkが分かれば応用がきくようにした。
+結果の値は初期値と膨張シミュレーション後の値を一つのdata.csvというファイルに書き込まれるように設定した。
+図1に初期設定の散布図を図2に膨張シミュレーション計算後の散布図を示す。
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=100mm]{first.eps}
+\end{center}
+\caption{初期設定の散布図}
+\label{fig:one}
+\end{figure}
+
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=100mm]{last.eps}
+\end{center}
+\caption{膨張計算後の散布図}
+\label{fig:one}
+\end{figure}
+
+
+\section*{練習問題(9)}
+\subsection*{ガウスザイデル法を偏微分方程式に適応するシミュレーションプログラム}
+
+以下に作成したプログラムGauss.javaのソースコードを載せる。
+\begin{lstlisting}{caption=gauss.java,label=ラベル}
+public class Gauss{
+    public static void main(String[] args){
+        int T = 2000;
+        calgauss gauss1 = new calgauss(2);  //オブジェクトの作成、初期化
+        for(int i = 0;i < T;i++) 
+            gauss1.calculate(1.0,1);
+        gauss1.printMatrix();
+    }
+}
+
+class calgauss{
+    private double[][] phi;
+    private int ix,iy;
+    private double p1,p2,rou;
+
+    calgauss(int N){      //Nは計算したい行列の値
+        phi = new double[N+2][N+2];
+        for (int k = 0; k < N+2; k++) 
+            for (int j = 0; j < N+2; j++) phi[k][j] = 0;
+        phi[1][3]=22.5;
+        phi[2][3]=36;
+        phi[3][1]=-4.5;
+        phi[3][2]=9;
+    }
+
+    public void calculate(double G,int dx){
+        for(ix = 1;ix <= phi.length-2;ix++)
+            for(iy = 1;iy <= phi.length-2;iy++){
+                p1 = phi[ix+1][iy]+phi[ix-1][iy]+phi[ix][iy+1]+phi[ix][iy-1];
+                rou = 6 * ix - 3 * iy;
+                p2 =  G * rou * dx * dx;
+                phi[ix][iy] = (p1 - p2)/4;
+            }
+    }
+
+    public void printMatrix(){
+        for(int i = phi.length - 2;i >= 1;i--){
+            for(int j = 1;j < phi.length - 1;j++)
+                System.out.printf("%7f " ,phi[j][i]);
+            System.out.println();
+        }
+    }
+}
+
+
+\end{lstlisting}
+
+以下に実行結果をのせる。結果は行列形式で表示した。
+解析解の結果と一致している。
+\begin{lstlisting}{caption=実行結果,label=ラベル}
+juo:week4 jyuo$ java Gauss
+9.000000 12.000000 
+1.500000 0.000000 
+\end{lstlisting}    
+今回はroの計算式と表示行列の大きさ、境界の値が分かればいくらでも応用が利くようにした。
+%\subsubsection*{(1-1)}
+
+\end{document}
