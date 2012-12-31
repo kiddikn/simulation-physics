@@ -2,6 +2,10 @@ public class Gauss{
     public static void main(String[] args){
         int T = 2000;
     calgauss gauss1 = new calgauss(2);  //オブジェクトの作成、初期化
+    gauss1.setMargin(1,3,22.5);
+    gauss1.setMargin(2,3,36);
+    gauss1.setMargin(3,1,-4.5);
+    gauss1.setMargin(3,2,9);
     for(int i = 0;i < T;i++) 
         gauss1.calculate(1.0,1);
     gauss1.printMatrix();
@@ -17,11 +21,16 @@ class calgauss{
        phi = new double[N+2][N+2];
        for (int k = 0; k < N+2; k++) 
            for (int j = 0; j < N+2; j++) phi[k][j] = 0;
-       phi[1][3]=22.5;
+      /* phi[1][3]=22.5;
        phi[2][3]=36;
        phi[3][1]=-4.5;
-       phi[3][2]=9;
+       phi[3][2]=9;*/
    }
+
+   public void setMargin(int x,int y,double val){
+       phi[x][y] = val;
+   }
+   
 
    public void calculate(double G,int dx){
        for(ix = 1;ix <= phi.length-2;ix++)
