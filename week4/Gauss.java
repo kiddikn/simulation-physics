@@ -21,10 +21,6 @@ class calgauss{
        phi = new double[N+2][N+2];
        for (int k = 0; k < N+2; k++) 
            for (int j = 0; j < N+2; j++) phi[k][j] = 0;
-      /* phi[1][3]=22.5;
-       phi[2][3]=36;
-       phi[3][1]=-4.5;
-       phi[3][2]=9;*/
    }
 
    public void setMargin(int x,int y,double val){
