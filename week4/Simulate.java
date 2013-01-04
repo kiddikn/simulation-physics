@@ -23,9 +23,9 @@ class Expansion{
         y  = new double[N];
         for (int k = 0; k < N*4; k++){
          if(count < N){
-            double x1 = 2*rnd.nextDouble() - 1;  
-            double y1 = 2*rnd.nextDouble() - 1;  
-            if(x1*x1+y1*y1<=1){
+            double x1 = 10*rnd.nextDouble() - 5;  
+            double y1 = 10*rnd.nextDouble() - 5;  
+            if(x1*x1+y1*y1<=5*5){
                 x0[count] = x1;
                 y0[count] = y1;
                 x[count] = x1;
